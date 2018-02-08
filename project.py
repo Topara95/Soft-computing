@@ -9,10 +9,10 @@ from vector import *
 blueSum = 0
 greenSum = 0
 
-def euclidean4(vector1, vector2):
-    ''' use scipy to calculate the euclidean distance. '''
-    dist = distance.euclidean(vector1, vector2)
-    return dist
+# def euclidean4(vector1, vector2):
+#     ''' use scipy to calculate the euclidean distance. '''
+#     dist = distance.euclidean(vector1, vector2)
+#     return dist
 
 def euclidean3(vector1, vector2):
     ''' use numpy.linalg.norm to calculate the euclidean distance. '''
@@ -33,7 +33,6 @@ def findLongest(lines):
     temp = 0
     longest = lines[0]
     for line in lines:
-        #print(line)
         x1,y1,x2,y2 = line[0]
         vector1 = [x1,y1]
         vector2 = [x2,y2]
@@ -44,6 +43,7 @@ def findLongest(lines):
     
     return longest
 
+#prvobitna metoda za tracking - ne radi kako treba
 def generateNumbers(coords):
     for coord in coords:
         flag = False
@@ -90,82 +90,6 @@ def generateNumbers2(kontura):
     return None
 
 
-#def SumIt():
-
-
-def createLineIterator(P1, P2, img):
-    """
-    Produces and array that consists of the coordinates and intensities of each pixel in a line between two points
-
-    Parameters:
-        -P1: a numpy array that consists of the coordinate of the first point (x,y)
-        -P2: a numpy array that consists of the coordinate of the second point (x,y)
-        -img: the image being processed
-
-    Returns:
-        -it: a numpy array that consists of the coordinates and intensities of each pixel in the radii (shape: [numPixels, 3], row = [x,y,intensity])     
-    """
-    #define local variables for readability
-    imageH = img.shape[0]
-    imageW = img.shape[1]
-    P1X = P1[0]
-    P1Y = P1[1]
-    P2X = P2[0]
-    P2Y = P2[1]
-
-    #difference and absolute difference between points
-    #used to calculate slope and relative location between points
-    dX = P2X - P1X
-    dY = P2Y - P1Y
-    dXa = np.abs(dX)
-    dYa = np.abs(dY)
-
-    #predefine numpy array for output based on distance between points
-    itbuffer = np.empty(shape=(np.maximum(dYa,dXa),3),dtype=np.float32)
-    itbuffer.fill(np.nan)
-
-    #Obtain coordinates along the line using a form of Bresenham's algorithm
-    negY = P1Y > P2Y
-    negX = P1X > P2X
-    if P1X == P2X: #vertical line segment
-        itbuffer[:,0] = P1X
-        if negY:
-            itbuffer[:,1] = np.arange(P1Y - 1,P1Y - dYa - 1,-1)
-        else:
-            itbuffer[:,1] = np.arange(P1Y+1,P1Y+dYa+1)              
-    elif P1Y == P2Y: #horizontal line segment
-        itbuffer[:,1] = P1Y
-        if negX:
-            itbuffer[:,0] = np.arange(P1X-1,P1X-dXa-1,-1)
-        else:
-            itbuffer[:,0] = np.arange(P1X+1,P1X+dXa+1)
-    else: #diagonal line segment
-        steepSlope = dYa > dXa
-        if steepSlope:
-            slope = dX.astype(np.float32)/dY.astype(np.float32)
-            if negY:
-                itbuffer[:,1] = np.arange(P1Y-1,P1Y-dYa-1,-1)
-            else:
-                itbuffer[:,1] = np.arange(P1Y+1,P1Y+dYa+1)
-            itbuffer[:,0] = (slope*(itbuffer[:,1]-P1Y)).astype(np.int) + P1X
-        else:
-            slope = dY.astype(np.float32)/dX.astype(np.float32)
-            if negX:
-                itbuffer[:,0] = np.arange(P1X-1,P1X-dXa-1,-1)
-            else:
-                itbuffer[:,0] = np.arange(P1X+1,P1X+dXa+1)
-            itbuffer[:,1] = (slope*(itbuffer[:,0]-P1X)).astype(np.int) + P1Y
-
-    #Remove points outside of image
-    colX = itbuffer[:,0]
-    colY = itbuffer[:,1]
-    itbuffer = itbuffer[(colX >= 0) & (colY >=0) & (colX<imageW) & (colY<imageH)]
-
-    #Get intensities from img ndarray
-    #itbuffer[:,2] = img[itbuffer[:,1].astype(np.uint),itbuffer[:,0].astype(np.uint)]
-
-    return itbuffer
-
 class ImgCoord:
 
     def __init__(self,x,y,w,h,pb,pg,img):
@@ -203,7 +127,6 @@ def HoughLines(img_orig):
     return lines
 
 def HoughLinesGRAY(img_orig):
-    #gray = cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(img_orig,50,150)
     gblur = cv2.GaussianBlur(edges,(7,7),1)
 
@@ -222,21 +145,15 @@ def calculateAreas(slike,blu_lines,gre_lines,coords,img,img_bin):
     P1b = [X1b,Y1b]
     P2b = [X2b,Y2b]
 
-    #iteratorG = createLineIterator(P1g,P2g,img)
-    #iteratorB = createLineIterator(P1b,P2b,img)
-
-    #print(iteratorB[1])
 
     for coord in coords:
         x = coord.x + coord.w
         y = coord.y + coord.h
         dist,nearest,r =pnt2line((x,y),(X1b,Y1b),(X2b,Y2b))
         if(dist <= 7 and coord.pb == False):
-            #print("Proso plavu")
             coord.pb = True
             cv2.rectangle(img,(coord.x,coord.y),(x,y),(0,255,0),2)
             image = img_bin[coord.y-7:y+7,coord.x-7:x+7]
-            #cv2.imshow("broj",image)
             #
             resized = cv2.resize(image, (28, 28), interpolation = cv2.INTER_NEAREST)
             scale = resized / 255
@@ -248,16 +165,12 @@ def calculateAreas(slike,blu_lines,gre_lines,coords,img,img_bin):
             nmb = model_NM.predict(imgNM)
             global blueSum
             blueSum+=np.argmax(nmb)
-            #print(np.argmax(nmb))
-            #cv2.waitKey(0)
 
         distg,nearestg,rg=pnt2line((x,y),(X1g,Y1g),(X2g,Y2g))
         if(distg <= 7 and coord.pg == False):
-            #print("Proso zelenu")
             coord.pg = True
             cv2.rectangle(img,(coord.x,coord.y),(x,y),(0,255,0),2)
             image = img_bin[coord.y-7:y+7,coord.x-7:x+7]
-            #cv2.imshow("broj",image)
             #
             resized = cv2.resize(image, (28, 28), interpolation = cv2.INTER_NEAREST)
             scale = resized / 255
@@ -268,10 +181,9 @@ def calculateAreas(slike,blu_lines,gre_lines,coords,img,img_bin):
             
             nmb = model_NM.predict(imgNM)
             blueSum-=np.argmax(nmb)
-            #print(np.argmax(nmb))
-            #cv2.waitKey(0)
 
 
+#prvobitna zamisao deljenja linija
 def differLines(lines):
     suma = 0
     green_lines = []
@@ -313,7 +225,6 @@ def select_roi(image_orig, image_bin):
         x,y,w,h = cv2.boundingRect(contour) #koordinate i velicina granicnog pravougaonika
         area = cv2.contourArea(contour)
         
-        #if(x>10 and x<630 and y>10 and y<470):
         if h > 9:
             imali = generateNumbers2(cv2.boundingRect(contour))
 
@@ -325,15 +236,10 @@ def select_roi(image_orig, image_bin):
                 imali.y = y
                 imali.w = w
                 imali.h = h
-            # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
-            # označiti region pravougaonikom na originalnoj slici (image_orig) sa rectangle funkcijom
+            
             region = image_bin[y:y+h,x:x+w]
             regions_array.append(resize_region(region))
             regions_coords.append(ImgCoord(x,y,w,h,False,False,resize_region(region)))
-                    
-            #cv2.rectangle(image_orig,(x-3,y-3),(x+w+3,y+h+3),(0,255,0),2)
-    #regions_array = sorted(regions_array, key=lambda item: item[1][0])
-    #sorted_regions = sorted_regions = [region[0] for region in regions_array]
     
     # sortirati sve regione po x osi (sa leva na desno) i smestiti u promenljivu sorted_regions
     return image_orig, regions_array, regions_coords
@@ -374,8 +280,7 @@ blu_lines = HoughLinesGRAY(b_blur)
 gre_lines = HoughLinesGRAY(g)
 longestB = findLongest(blu_lines)
 longestG = findLongest(gre_lines)
-#cv2.imshow('lol',r)
-#cv2.waitKey(10)
+
 
 brojevi = []
 
@@ -389,16 +294,10 @@ while(True):
         img_bin = image_bin(gray)
         img, slike, coords = select_roi(frame,img_bin)
         
-        #generateNumbers(coords)
         calculateAreas(slike,longestB,longestG,brojevi,frame,img_bin)
-
-        #slike = prepare_for_ann(np.array(slike))
-        
         
         x1,y1,x2,y2 = longestB[0]
         cv2.line(frame,(x1,y1),(x2,y2),(0,0,255),2)
-        
-
         
         x1,y1,x2,y2 = longestG[0]
         cv2.line(frame,(x1,y1),(x2,y2),(255,255,0),2)
