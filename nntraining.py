@@ -47,10 +47,10 @@ model.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='
 
 # training the model and saving metrics in history
 history = model.fit(X_train, Y_train,
-          batch_size=128, epochs=20,
-          verbose=2
+          batch_size=32, epochs=8,
+          verbose=1
           )
 
 # saving the model
 
-model.save("kerastopaDIF.h5")
+model.save("nju10k.h5")
